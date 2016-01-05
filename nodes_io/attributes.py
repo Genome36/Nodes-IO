@@ -1,5 +1,9 @@
 #!/usr/bin/python3
 
+# --------------------------------------------------
+# ATTRIBUTES
+# --------------------------------------------------
+
 defaults = [
 	"bl_idname",
 #	"type", # read-only
@@ -90,4 +94,21 @@ specials = [
 	"uv_map",           # ["TANGENT", "UVMAP", "NORMAL_MAP"]
 	"vector_type",      # ["MAPPING", "VECT_TRANSFORM"]
 	"wave_type",        # ["TEX_WAVE"]
+]
+
+# --------------------------------------------------
+# INPUTS / OUTPUTS TYPES
+# --------------------------------------------------
+
+sock_vectors = [
+	"RGBA",
+	"VECTOR",
+]
+
+sock_values = [
+	"CUSTOM",
+	"VALUE",
+	"INT",
+	"BOOLEAN",
+	"STRING",
 ]

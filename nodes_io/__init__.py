@@ -58,7 +58,7 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 	def execute(self, context):
 		active_object = context.active_object
 		material      = active_object.material_slots[0].material
-		tree          = material.node_tree
+		mat_tree      = material.node_tree
 
 		for shader in self.files:
 			#~ try:
@@ -67,46 +67,79 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 			with open(file_path, "r") as shader_file:
 				shader = json.load(shader_file)
 
+			# deselect all nodes prior to import
+			for node in mat_tree.nodes:
+				if hasattr(node, "select"):
+					node.select = False
+
 			# create nodes
-			for node_data in shader["root"]["nodes"]:
+			for tree_index in range(len(shader["trees"])-1, -1, -1):
+				tree = shader["trees"][str(tree_index)] # json converts int keys to str
+
+				# determine whats node tree to use (either base or group)
+				if tree_index > 0: # groups trees
+					nodes_tree = bpy.data.node_groups.new(tree["name"], tree["type"])
+				else:
+					nodes_tree = mat_tree
+
+
+				# parse
+				for node_data in tree["nodes"]:
+					#~ try:
+					# create instance
+					node = nodes_tree.nodes.new(node_data["attributes"]["bl_idname"])
+
+					# add datablock to node group
+					if node_data["attributes"]["bl_idname"] == "ShaderNodeGroup":
+						node.node_tree = bpy.data.node_groups[node_data["attributes"]["datablock"]]
+
+					node.select = True
+					del node_data["attributes"]["bl_idname"]
+					del node_data["attributes"]["datablock"]
+
+					# set attributes
+					for attr in node_data["attributes"]:
+						setattr(node, attr, node_data["attributes"][attr])
+
+					# set inputs
+					for index in range(0, len(node_data["inputs"])-1):
+						value, bl_idname, sock_name = node_data["inputs"][str(index)] #json
+						if "NodeGroupOutput" == node.bl_idname:
+							nodes_tree.outputs.new(bl_idname, sock_name)
+
+						if hasattr(node.inputs[index], "default_value"):
+							node.inputs[index].default_value = value
+
+					# set outputs
+					for index in range(0, len(node_data["outputs"])-1):
+						value, bl_idname, sock_name = node_data["outputs"][str(index)] #json
+						if "NodeGroupInput" == node.bl_idname:
+							nodes_tree.inputs.new(bl_idname, sock_name)
+
+						if hasattr(node.outputs[index], "default_value"):
+							node.outputs[index].default_value = value
+
+					parent = node_data["parent"]
+					if parent:
+						node.parent = nodes_tree.nodes[parent]
+
+					#~ except Exception as error:
+						#~ print(error)
+
+
+				# create links
+				for link_data in tree["links"]:
 				#~ try:
-				# create instance
-				node = tree.nodes.new(node_data["attributes"]["bl_idname"])
-				del node_data["attributes"]["bl_idname"]
+					name, index  = link_data["from"]
+					input_socket = nodes_tree.nodes[name].outputs[index]
 
-				# set attributes
-				for attr in node_data["attributes"]:
-					setattr(node, attr, node_data["attributes"][attr])
+					name, index  = link_data["to"]
+					output_socket = nodes_tree.nodes[name].inputs[index]
 
-				# set inputs
-				for index, value in node_data["inputs"]:
-					if hasattr(node.inputs[index], "default_value"):
-						node.inputs[index].default_value = value
-
-				# set outputs
-				for index, value in node_data["outputs"]:
-					if hasattr(node.outputs[index], "default_value"):
-						node.outputs[index].default_value = value
-
-				parent = node_data["parent"]
-				if parent:
-					node.parent = tree.nodes[parent]
+					nodes_tree.links.new(input_socket, output_socket)
 
 				#~ except Exception as error:
 					#~ print(error)
-
-			# create links
-			for link_data in shader["root"]["links"]:
-				name, index  = link_data["from"]
-				input_socket = tree.nodes[name].outputs[index]
-
-				name, index   = link_data["to"]
-				output_socket = tree.nodes[name].inputs[index]
-
-				tree.links.new(input_socket, output_socket)
-
-			#~ except Exception as error:
-				#~ print(error)
 
 		return {'FINISHED'}
 
@@ -121,37 +154,59 @@ class sio_export(bpy.types.Operator):
 	def execute(self, context):
 		active_object = context.active_object
 		material      = active_object.material_slots[0].material
-		tree          = material.node_tree
+		mat_tree      = material.node_tree
+
+		trees_list = {
+			0: ("base", mat_tree.bl_idname, mat_tree)
+		}
 
 		# find groups via recursion
-		groups = {}
-		def recursive_search(tree, level=0):
+		#~ groups = {}
+		def recursive_search(tree, level=1):
 			# parse nodes
 			for node in tree.nodes:
 				if node.type == "GROUP":
 					# create level index
-					if not level in groups:
-						groups[level] = []
+					#~ if not level in groups:
+						#~ groups[level] = []
 
-					groups[level].append(node.name)
+					# if node group has node tree
+					if node.node_tree != None:
+						for datablock in bpy.data.node_groups:
+							if datablock == node.node_tree:
 
-					# recursion
-					level += 1
-					recursive_search(node.node_tree, level=level)
-					level -= 1
+								# search for stored duplicate
+								inside = False
+								for index in trees_list:
+									name, bl_idname, block = trees_list[index]
+									if datablock == block:
+										inside = True
+										break
 
-		recursive_search(tree)
-		print(groups)
+								# len(trees_list) is already +1
+								if not inside:
+									trees_list[len(trees_list)] = (datablock.name, datablock.bl_idname, datablock)
 
-		trees_list = []
-		for root in [tree]:
+								# recursion
+								level += 1
+								recursive_search(datablock, level=level)
+								level -= 1
+
+								# stop loop for efficiency
+								break
+
+		recursive_search(mat_tree)
+
+
+		trees_dump = {}
+		for index in range(len(trees_list)-1, -1, -1):
+			name, bl_idname, tree = trees_list[index]
 
 			nodes_list = []
-			for node in root.nodes:
+			for node in tree.nodes:
 				parent = None
 				if node.parent:
 					parent = node.parent.name
-					print(parent)
 
 				nodes_list.append(
 					{
@@ -162,7 +217,13 @@ class sio_export(bpy.types.Operator):
 					}
 				)
 
-				#~ print(nodes_list)
+			trees_dump[index] = {
+				"name":  name,
+				"type":  bl_idname,
+				"nodes": nodes_list,
+				"links": utils.get.links(tree)
+			}
+
 
 		# format name
 		mat_name = material.name
@@ -174,17 +235,14 @@ class sio_export(bpy.types.Operator):
 		directory  = os.path.dirname(blend_path)
 		file_path  = os.path.join(directory, "%s.mat" % mat_name)
 
-		# dump shader data
+		#~ # dump shader data
 		with open(file_path, "w") as shader_file:
 			json.dump(
 				{
 					"engine":  context.scene.render.engine,
 					"version": bpy.app.version,
-					"root": {
-						"nodes": nodes_list,
-						"links": utils.get.links(tree), # parse links
-					},
-						"groups": groups
+					"trees":   trees_dump,
+					#~ "groups":  groups
 				},
 				shader_file,
 				indent = 4

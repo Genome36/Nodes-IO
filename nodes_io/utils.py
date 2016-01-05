@@ -9,11 +9,11 @@ class get():
 		pass
 
 # --------------------------------------------------
-#
+# GET SOCKETS INPUTS/OUTPUTS
 # --------------------------------------------------
 
 	def sockets(io):
-		data = []
+		data = {}
 		for index in range(0, len(io)):
 			sock = io[index]
 			sock_type  = str(sock.type)
@@ -25,7 +25,7 @@ class get():
 				elif sock_type in ["CUSTOM", "VALUE", "INT", "BOOLEAN", "STRING"]:
 					value = sock.default_value
 
-				data.append((index, value))
+				data[str(index)] = (value, sock.bl_idname, sock.name)
 
 			except:
 				pass
@@ -33,7 +33,7 @@ class get():
 		return data
 
 # --------------------------------------------------
-#
+# GET ATTRIBUTES
 # --------------------------------------------------
 
 	def attributes(node):
@@ -52,10 +52,16 @@ class get():
 
 					attr_dict[attr] = value
 
+		# group datablock
+		if node.bl_idname == "ShaderNodeGroup":
+			attr_dict["datablock"] = node.node_tree.name
+		else:
+			attr_dict["datablock"] = None
+
 		return attr_dict
 
 # --------------------------------------------------
-#
+# GET LINKS
 # --------------------------------------------------
 
 	def links(tree):
@@ -82,3 +88,31 @@ class get():
 			)
 
 		return links_data
+
+class set():
+
+	DEBUG = True
+
+	def __init__():
+		pass
+
+# --------------------------------------------------
+# SET SOCKETS INPUTS/OUTPUTS
+# --------------------------------------------------
+
+	def socket(io):
+		pass
+
+# --------------------------------------------------
+# SET ATTRIBUTES
+# --------------------------------------------------
+
+	def attributes(node):
+		pass
+
+# --------------------------------------------------
+# SET LINKS
+# --------------------------------------------------
+
+	def links(tree):
+		pass
