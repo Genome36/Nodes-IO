@@ -78,7 +78,11 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 
 				# determine whats node tree to use (either base or group)
 				if tree_index > 0: # groups trees
-					nodes_tree = bpy.data.node_groups.new(tree["name"], tree["type"])
+					# prevent any duplicates
+					if tree["name"] in [ i.name for i in bpy.data.node_groups ]:
+						nodes_tree = bpy.data.node_groups[tree["name"]]
+					else:
+						nodes_tree = bpy.data.node_groups.new(tree["name"], tree["type"])
 				else:
 					nodes_tree = mat_tree
 
