@@ -92,12 +92,13 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 					#~ try:
 					# create instance
 					node = nodes_tree.nodes.new(node_data["attributes"]["bl_idname"])
+					node.select = True
 
 					# add datablock to node group
 					if node_data["attributes"]["bl_idname"] == "ShaderNodeGroup":
 						node.node_tree = bpy.data.node_groups[node_data["attributes"]["datablock"]]
 
-					node.select = True
+					# remove read-only attributes before applying
 					del node_data["attributes"]["bl_idname"]
 					del node_data["attributes"]["datablock"]
 
@@ -123,6 +124,7 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 						if hasattr(node.outputs[index], "default_value"):
 							node.outputs[index].default_value = value
 
+					# parent
 					parent = node_data["parent"]
 					if parent:
 						node.parent = nodes_tree.nodes[parent]
@@ -134,13 +136,13 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 				# create links
 				for link_data in tree["links"]:
 				#~ try:
-					name, index  = link_data["from"]
-					input_socket = nodes_tree.nodes[name].outputs[index]
+					name, index = link_data["from"]
+					from_socket = nodes_tree.nodes[name].outputs[index]
 
-					name, index  = link_data["to"]
-					output_socket = nodes_tree.nodes[name].inputs[index]
+					name, index = link_data["to"]
+					to_socket   = nodes_tree.nodes[name].inputs[index]
 
-					nodes_tree.links.new(input_socket, output_socket)
+					nodes_tree.links.new(from_socket, to_socket)
 
 				#~ except Exception as error:
 					#~ print(error)

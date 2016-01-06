@@ -25,7 +25,7 @@ class get():
 				elif sock_type in ["CUSTOM", "VALUE", "INT", "BOOLEAN", "STRING"]:
 					value = sock.default_value
 
-				data[str(index)] = (value, sock.bl_idname, sock.name)
+				data[index] = (sock.bl_idname, sock.name, value)
 
 			except:
 				pass

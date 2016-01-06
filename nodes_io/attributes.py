@@ -30,8 +30,8 @@ defaults = [
 	"show_preview",
 	"show_texture",
 
-#	"inputs",
-#	"outputs",
+#	"inputs",  # list with more complex layout
+#	"outputs", # list with more complex layout
 ]
 
 specials = [
