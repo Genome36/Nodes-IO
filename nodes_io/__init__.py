@@ -2,6 +2,9 @@
 import bpy
 import bpy_extras
 
+from mathutils import Euler  as math_euler
+from mathutils import Vector as math_vector
+
 # serialization
 import json
 import os
@@ -104,7 +107,20 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 
 					# set attributes
 					for attr in node_data["attributes"]:
-						setattr(node, attr, node_data["attributes"][attr])
+						node_attr = getattr(node, attr)
+						value     = node_data["attributes"][attr]
+
+						# mathutils vector
+						if isinstance(node_attr, math_vector):
+							setattr(node, attr, math_vector(value))
+
+						# mathutils euler
+						elif isinstance(node_attr, math_euler):
+							setattr(node, attr, math_euler(*value))
+
+						# all others
+						else:
+							setattr(node, attr, value)
 
 					# set inputs
 					for index in range(0, len(node_data["inputs"])-1):

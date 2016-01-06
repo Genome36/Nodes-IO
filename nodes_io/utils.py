@@ -1,6 +1,10 @@
 #!/usr/bin/python3
 from . import attributes
 
+from mathutils import Euler  as math_euler
+from mathutils import Vector as math_vector
+
+
 class get():
 
 	DEBUG = True
@@ -47,6 +51,17 @@ class get():
 					if attr in ["location", "color"]:
 						value = [i for i in value]
 
+					# mathutils vector
+					elif isinstance(value, math_vector):
+						value = value.copy()
+						value = [value.x, value.y, value.z]
+
+					# mathutils euler
+					elif isinstance(value, math_euler):
+						value = value.copy()
+						value = [[value.x, value.y, value.z], value.order]
+
+					# default
 					elif hasattr(value, "default_value"):
 						value = value.default_value
 
