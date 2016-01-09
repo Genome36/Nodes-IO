@@ -5,6 +5,34 @@ from mathutils import Euler  as math_euler
 from mathutils import Vector as math_vector
 
 
+class ignore():
+
+	socket_types = [
+		"NodeSocketVirtual",
+	]
+
+	# only nodes with no socket values needed
+	nodes = [
+		"NodeFrame",
+		"NodeReroute",
+		"ShaderNodeAttribute",
+		"ShaderNodeCameraData",
+		"ShaderNodeHairInfo",
+		"ShaderNodeHoldout",
+		"ShaderNodeLightPath",
+		"ShaderNodeNewGeometry",
+		"ShaderNodeObjectInfo",
+		"ShaderNodeOutputLamp",
+		"ShaderNodeOutputMaterial",
+		"ShaderNodeParticleInfo",
+		"ShaderNodeRGB",
+		"ShaderNodeTangent",
+		"ShaderNodeTexCoord",
+		"ShaderNodeUVMap",
+		"ShaderNodeValue"
+	]
+
+
 class get():
 
 	DEBUG = True
@@ -23,25 +51,26 @@ class get():
 			sock_type  = str(sock.type)
 
 			#~ try:
-			value    = None
-			sock_min = None
-			sock_max = None
+			if sock.bl_idname not in ignore.socket_types and sock.node.bl_idname in ignore.nodes:
+				value    = None
+				sock_min = None
+				sock_max = None
 
-			# group input min and max values for user
-			if sock.node.bl_idname == "NodeGroupInput":
-				if tree.inputs[index].bl_socket_idname in ["NodeSocketFloat", "NodeSocketFloatFactor"]:
-					sock_min = tree.inputs[index].min_value
-					sock_max = tree.inputs[index].max_value
+				# group input min and max values for user
+				if sock.node.bl_idname == "NodeGroupInput":
+					if tree.inputs[index].bl_socket_idname in ["NodeSocketFloat", "NodeSocketFloatFactor"]:
+						sock_min = tree.inputs[index].min_value
+						sock_max = tree.inputs[index].max_value
 
-			# get value
-			if sock_type in ["RGBA", "VECTOR"]:
-				value = [ i for i in sock.default_value ]
+				# get value
+				if sock_type in ["RGBA", "VECTOR"]:
+					value = [ i for i in sock.default_value ]
 
-			elif sock_type in ["CUSTOM", "VALUE", "INT", "BOOLEAN", "STRING"]:
-				if hasattr(sock, "default_value"):
-					value = sock.default_value
+				elif sock_type in ["CUSTOM", "VALUE", "INT", "BOOLEAN", "STRING"]:
+					if hasattr(sock, "default_value"):
+						value = sock.default_value
 
-			data[index] = (sock.bl_idname, sock.name, value, sock_min, sock_max)
+				data[index] = (sock.bl_idname, sock.name, value, sock_min, sock_max)
 
 			#~ except:
 				#~ pass

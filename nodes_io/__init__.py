@@ -147,8 +147,9 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 								# node inputs = group outputs
 								socket = nodes_tree.outputs.new(bl_idname, sock_name)
 
-							if hasattr(node.inputs[index], "default_value"):
-								node.inputs[index].default_value = value
+							if node.bl_idname not in utils.ignore.nodes:
+								if hasattr(node.inputs[index], "default_value"):
+									node.inputs[index].default_value = sock_value
 
 					# set outputs
 					for index in range(0, len(node_data["outputs"])):
@@ -164,8 +165,9 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 										socket.min_value = sock_min
 										socket.max_value = sock_max
 
-							if hasattr(node.outputs[index], "default_value"):
-								node.outputs[index].default_value = value
+							if node.bl_idname not in utils.ignore.nodes:
+								if hasattr(node.outputs[index], "default_value"):
+									node.outputs[index].default_value = sock_value
 
 					# parent
 					parent = node_data["parent"]
