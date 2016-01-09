@@ -16,23 +16,35 @@ class get():
 # GET SOCKETS INPUTS/OUTPUTS
 # --------------------------------------------------
 
-	def sockets(io):
+	def sockets(tree, io):
 		data = {}
 		for index in range(0, len(io)):
 			sock = io[index]
 			sock_type  = str(sock.type)
 
-			try:
-				if sock_type in ["RGBA", "VECTOR"]:
-					value = [ i for i in sock.default_value ]
+			#~ try:
+			value    = None
+			sock_min = None
+			sock_max = None
 
-				elif sock_type in ["CUSTOM", "VALUE", "INT", "BOOLEAN", "STRING"]:
+			# group input min and max values for user
+			if sock.node.bl_idname == "NodeGroupInput":
+				if tree.inputs[index].bl_socket_idname in ["NodeSocketFloat", "NodeSocketFloatFactor"]:
+					sock_min = tree.inputs[index].min_value
+					sock_max = tree.inputs[index].max_value
+
+			# get value
+			if sock_type in ["RGBA", "VECTOR"]:
+				value = [ i for i in sock.default_value ]
+
+			elif sock_type in ["CUSTOM", "VALUE", "INT", "BOOLEAN", "STRING"]:
+				if hasattr(sock, "default_value"):
 					value = sock.default_value
 
-				data[index] = (sock.bl_idname, sock.name, value)
+			data[index] = (sock.bl_idname, sock.name, value, sock_min, sock_max)
 
-			except:
-				pass
+			#~ except:
+				#~ pass
 
 		return data
 

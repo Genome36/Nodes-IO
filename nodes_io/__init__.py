@@ -142,9 +142,10 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 					# set inputs
 					for index in range(0, len(node_data["inputs"])):
 						if str(index) in node_data["inputs"]:
-							bl_idname, sock_name, value = node_data["inputs"][str(index)] #json
+							bl_idname, sock_name, sock_value, sock_min, sock_max = node_data["inputs"][str(index)] #json
 							if "NodeGroupOutput" == node.bl_idname:
-								nodes_tree.outputs.new(bl_idname, sock_name)
+								# node inputs = group outputs
+								socket = nodes_tree.outputs.new(bl_idname, sock_name)
 
 							if hasattr(node.inputs[index], "default_value"):
 								node.inputs[index].default_value = value
@@ -152,9 +153,16 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 					# set outputs
 					for index in range(0, len(node_data["outputs"])):
 						if str(index) in node_data["outputs"]:
-							bl_idname, sock_name, value = node_data["outputs"][str(index)] #json
-							if "NodeGroupInput" == node.bl_idname:
-								nodes_tree.inputs.new(bl_idname, sock_name)
+							bl_idname, sock_name, sock_value, sock_min, sock_max = node_data["outputs"][str(index)] #json
+
+							if  node.bl_idname == "NodeGroupInput":
+								# node outputs = group inputs
+								socket = nodes_tree.inputs.new(bl_idname, sock_name)
+
+								if socket.bl_socket_idname in ["NodeSocketFloat", "NodeSocketFloatFactor"]:
+									if hasattr(socket, "min_value") and hasattr(socket, "max_value"):
+										socket.min_value = sock_min
+										socket.max_value = sock_max
 
 							if hasattr(node.outputs[index], "default_value"):
 								node.outputs[index].default_value = value
@@ -252,8 +260,8 @@ class sio_export(bpy.types.Operator):
 				nodes_list.append(
 					{
 						"attributes": utils.get.attributes(node),
-						"inputs":     utils.get.sockets(node.inputs),
-						"outputs":    utils.get.sockets(node.outputs),
+						"inputs":     utils.get.sockets(tree, node.inputs),
+						"outputs":    utils.get.sockets(tree, node.outputs),
 						"parent":     parent
 					}
 				)
