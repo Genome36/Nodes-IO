@@ -47,8 +47,8 @@ class get():
 	def sockets(tree, io):
 		data = {}
 		for index in range(0, len(io)):
-			sock = io[index]
-			sock_type  = str(sock.type)
+			sock      = io[index]
+			sock_type = str(sock.type)
 
 			#~ try:
 			if sock.bl_idname not in ignore.socket_types and sock.node.bl_idname in ignore.nodes:
@@ -89,6 +89,7 @@ class get():
 				if hasattr(node, attr):
 					value = getattr(node, attr)
 
+					# tuple
 					if attr in ["location", "color"]:
 						value = [i for i in value]
 
@@ -157,6 +158,7 @@ class get():
 			)
 
 		return links_data
+
 
 class set():
 
