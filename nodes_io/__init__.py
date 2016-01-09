@@ -106,25 +106,42 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 					del node_data["attributes"]["datablock"]
 
 					# set attributes
-					for attr in node_data["attributes"]:
-						node_attr = getattr(node, attr)
-						value     = node_data["attributes"][attr]
 
-						# mathutils vector
-						if isinstance(node_attr, math_vector):
-							setattr(node, attr, math_vector(value))
+					# color ramp
+					if node.bl_idname in ["ShaderNodeValToRGB"]:
+						node.color_ramp.color_mode    = node_data["attributes"]["color_mode"]
+						node.color_ramp.interpolation = node_data["attributes"]["interpolation"]
 
-						# mathutils euler
-						elif isinstance(node_attr, math_euler):
-							setattr(node, attr, math_euler(*value))
+						elements = node_data["attributes"]["elements"]
+						missing_pointers = len(elements) - len(node.color_ramp.elements)
+						for i in range(0, missing_pointers):
+							node.color_ramp.elements.new(0.0)
 
-						# all others
-						else:
-							setattr(node, attr, value)
+						for index in range(0, len(elements)):
+							pos, color = elements[str(index)] #json
+							node.color_ramp.elements[index].position = pos
+							node.color_ramp.elements[index].color    = color
+
+					else:
+						for attr in node_data["attributes"]:
+							node_attr = getattr(node, attr)
+							value     = node_data["attributes"][attr]
+
+							# mathutils vector
+							if isinstance(node_attr, math_vector):
+								setattr(node, attr, math_vector(value))
+
+							# mathutils euler
+							elif isinstance(node_attr, math_euler):
+								setattr(node, attr, math_euler(*value))
+
+							# all others
+							else:
+								setattr(node, attr, value)
 
 					# set inputs
 					for index in range(0, len(node_data["inputs"])-1):
-						value, bl_idname, sock_name = node_data["inputs"][str(index)] #json
+						bl_idname, sock_name, value = node_data["inputs"][str(index)] #json
 						if "NodeGroupOutput" == node.bl_idname:
 							nodes_tree.outputs.new(bl_idname, sock_name)
 
@@ -133,7 +150,7 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 
 					# set outputs
 					for index in range(0, len(node_data["outputs"])-1):
-						value, bl_idname, sock_name = node_data["outputs"][str(index)] #json
+						bl_idname, sock_name, value = node_data["outputs"][str(index)] #json
 						if "NodeGroupInput" == node.bl_idname:
 							nodes_tree.inputs.new(bl_idname, sock_name)
 

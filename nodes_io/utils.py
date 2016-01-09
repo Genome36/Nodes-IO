@@ -61,6 +61,19 @@ class get():
 						value = value.copy()
 						value = [[value.x, value.y, value.z], value.order]
 
+					# color ramp
+					elif node.bl_idname in ["ShaderNodeValToRGB"]:
+						attr_dict["color_mode"]    = node.color_ramp.color_mode
+						attr_dict["interpolation"] = node.color_ramp.interpolation
+
+						attr_dict["elements"] = {}
+						elements = node.color_ramp.elements
+						for index in range(0, len(elements)):
+							pos   = elements[index].position
+							color = [i for i in elements[index].color]
+
+							attr_dict["elements"][index] = [pos, color]
+
 					# default
 					elif hasattr(value, "default_value"):
 						value = value.default_value
