@@ -140,22 +140,24 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 								setattr(node, attr, value)
 
 					# set inputs
-					for index in range(0, len(node_data["inputs"])-1):
-						bl_idname, sock_name, value = node_data["inputs"][str(index)] #json
-						if "NodeGroupOutput" == node.bl_idname:
-							nodes_tree.outputs.new(bl_idname, sock_name)
+					for index in range(0, len(node_data["inputs"])):
+						if str(index) in node_data["inputs"]:
+							bl_idname, sock_name, value = node_data["inputs"][str(index)] #json
+							if "NodeGroupOutput" == node.bl_idname:
+								nodes_tree.outputs.new(bl_idname, sock_name)
 
-						if hasattr(node.inputs[index], "default_value"):
-							node.inputs[index].default_value = value
+							if hasattr(node.inputs[index], "default_value"):
+								node.inputs[index].default_value = value
 
 					# set outputs
-					for index in range(0, len(node_data["outputs"])-1):
-						bl_idname, sock_name, value = node_data["outputs"][str(index)] #json
-						if "NodeGroupInput" == node.bl_idname:
-							nodes_tree.inputs.new(bl_idname, sock_name)
+					for index in range(0, len(node_data["outputs"])):
+						if str(index) in node_data["outputs"]:
+							bl_idname, sock_name, value = node_data["outputs"][str(index)] #json
+							if "NodeGroupInput" == node.bl_idname:
+								nodes_tree.inputs.new(bl_idname, sock_name)
 
-						if hasattr(node.outputs[index], "default_value"):
-							node.outputs[index].default_value = value
+							if hasattr(node.outputs[index], "default_value"):
+								node.outputs[index].default_value = value
 
 					# parent
 					parent = node_data["parent"]
