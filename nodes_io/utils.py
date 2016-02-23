@@ -51,7 +51,7 @@ class get():
 			sock_type = str(sock.type)
 
 			#~ try:
-			if sock.bl_idname not in ignore.socket_types and sock.node.bl_idname in ignore.nodes:
+			if sock.bl_idname not in ignore.socket_types and sock.node.bl_idname not in ignore.nodes:
 				value    = None
 				sock_min = None
 				sock_max = None
