@@ -141,6 +141,10 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 							elif isinstance(node_attr, math_euler):
 								setattr(node, attr, math_euler(*value))
 
+							# object
+							elif attr in ["object"]:
+								setattr(node, attr, bpy.data.objects[value])
+
 							# all others
 							else:
 								setattr(node, attr, value)

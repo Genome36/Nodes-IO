@@ -106,6 +106,11 @@ class get():
 						value = value.copy()
 						value = [[value.x, value.y, value.z], value.order]
 
+					# object
+					elif attr in ["object"]:
+						if getattr(node, attr):
+							value = getattr(node, attr).name
+
 					# color ramp
 					elif node.bl_idname in ["ShaderNodeValToRGB"]:
 						attr_dict["color_mode"]    = node.color_ramp.color_mode
