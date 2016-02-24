@@ -79,6 +79,14 @@ class get():
 	def attributes(node):
 		attr_dict = {}
 		for attr_list in [attributes.defaults]:#, attributes.specials]:
+
+		# group datablock
+		if node.bl_idname in ["ShaderNodeGroup"] and node.node_tree != None:
+			attr_dict["datablock"] = node.node_tree.name
+		else:
+			attr_dict["datablock"] = None
+
+
 			for attr in attr_list:
 
 				if hasattr(node, attr):
@@ -111,17 +119,13 @@ class get():
 
 							attr_dict["elements"][index] = [pos, color]
 
+
 					# default
 					elif hasattr(value, "default_value"):
 						value = value.default_value
 
 					attr_dict[attr] = value
 
-		# group datablock
-		if node.bl_idname == "ShaderNodeGroup":
-			attr_dict["datablock"] = node.node_tree.name
-		else:
-			attr_dict["datablock"] = None
 
 		return attr_dict
 

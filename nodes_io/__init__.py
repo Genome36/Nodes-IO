@@ -98,7 +98,7 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 					node.select = True
 
 					# add datablock to node group
-					if node_data["attributes"]["bl_idname"] == "ShaderNodeGroup":
+					if node_data["attributes"]["datablock"] != None and node_data["attributes"]["bl_idname"] == "ShaderNodeGroup":
 						node.node_tree = bpy.data.node_groups[node_data["attributes"]["datablock"]]
 
 					# remove read-only attributes before applying
