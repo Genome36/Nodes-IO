@@ -2,11 +2,7 @@
 import bpy
 import bpy_extras
 
-from mathutils import Euler  as math_euler
-from mathutils import Vector as math_vector
-
 # serialization
-import json
 import os
 
 # tools
@@ -111,96 +107,17 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 					del node_data["attributes"]["bl_idname"]
 					del node_data["attributes"]["datablock"]
 
-					# set attributes
-
-					# parent
-					parent = node_data["parent"]
-					if parent:
-						node.parent = nodes_tree.nodes[parent]
-
-					# color ramp
-					if node.bl_idname in ["ShaderNodeValToRGB"]:
-						node.color_ramp.color_mode    = node_data["attributes"]["color_mode"]
-						node.color_ramp.interpolation = node_data["attributes"]["interpolation"]
-
-						elements = node_data["attributes"]["elements"]
-						missing_pointers = len(elements) - len(node.color_ramp.elements)
-						for i in range(0, missing_pointers):
-							node.color_ramp.elements.new(0.0)
-
-						for index in range(0, len(elements)):
-							pos, color = elements[str(index)] #json
-							node.color_ramp.elements[index].position = pos
-							node.color_ramp.elements[index].color    = color
-
-					else:
-						for attr in node_data["attributes"]:
-							node_attr = getattr(node, attr)
-							value     = node_data["attributes"][attr]
-
-							# mathutils vector
-							if isinstance(node_attr, math_vector):
-								setattr(node, attr, math_vector(value))
-
-							# mathutils euler
-							elif isinstance(node_attr, math_euler):
-								setattr(node, attr, math_euler(*value))
-
-							# object
-							elif attr in ["object"]:
-								setattr(node, attr, bpy.data.objects[value])
-
-							# all others
-							else:
-								setattr(node, attr, value)
-
-					# set inputs
-					for index in range(0, len(node_data["inputs"])):
-						if str(index) in node_data["inputs"]:
-							bl_idname, sock_name, sock_value, sock_min, sock_max = node_data["inputs"][str(index)] #json
-							if "NodeGroupOutput" == node.bl_idname:
-								# node inputs = group outputs
-								socket = nodes_tree.outputs.new(bl_idname, sock_name)
-
-							if node.bl_idname not in utils.ignore.nodes:
-								if hasattr(node.inputs[index], "default_value"):
-									node.inputs[index].default_value = sock_value
-
-					# set outputs
-					for index in range(0, len(node_data["outputs"])):
-						if str(index) in node_data["outputs"]:
-							bl_idname, sock_name, sock_value, sock_min, sock_max = node_data["outputs"][str(index)] #json
-
-							if  node.bl_idname == "NodeGroupInput":
-								# node outputs = group inputs
-								socket = nodes_tree.inputs.new(bl_idname, sock_name)
-
-								if socket.bl_socket_idname in ["NodeSocketFloat", "NodeSocketFloatFactor"]:
-									if hasattr(socket, "min_value") and hasattr(socket, "max_value"):
-										socket.min_value = sock_min
-										socket.max_value = sock_max
-
-							if node.bl_idname not in utils.ignore.nodes:
-								if hasattr(node.outputs[index], "default_value"):
-									node.outputs[index].default_value = sock_value
+					# set data
+					utils.set.attributes(nodes_tree, node, node_data)
+					utils.set.socket.inputs(nodes_tree, node, node_data)
+					utils.set.socket.outputs(nodes_tree, node, node_data)
 
 					#~ except Exception as error:
 						#~ print(error)
 
 
 				# create links
-				for link_data in tree["links"]:
-				#~ try:
-					name, index = link_data["from"]
-					from_socket = nodes_tree.nodes[name].outputs[index]
-
-					name, index = link_data["to"]
-					to_socket   = nodes_tree.nodes[name].inputs[index]
-
-					nodes_tree.links.new(from_socket, to_socket)
-
-				#~ except Exception as error:
-					#~ print(error)
+				utils.set.links(nodes_tree, tree["links"])
 
 		return {'FINISHED'}
 
