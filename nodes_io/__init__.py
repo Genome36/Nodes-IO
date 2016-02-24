@@ -58,6 +58,12 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 	)
 
 
+	@classmethod
+	def poll(cls, context):
+		scene = context.scene
+		return (scene and scene.render.engine in ["BLENDER_RENDER", "CYCLES"])
+
+
 	def execute(self, context):
 		active_object = context.active_object
 		material      = active_object.material_slots[0].material
@@ -201,6 +207,13 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 class sio_export(bpy.types.Operator):
 	bl_idname = "sio.export"
 	bl_label  = "Export shader to file"
+
+
+	@classmethod
+	def poll(cls, context):
+		scene = context.scene
+		return (scene and scene.render.engine in ["BLENDER_RENDER", "CYCLES"])
+
 
 	def execute(self, context):
 		active_object = context.active_object
