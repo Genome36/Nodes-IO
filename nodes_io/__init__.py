@@ -113,6 +113,11 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 
 					# set attributes
 
+					# parent
+					parent = node_data["parent"]
+					if parent:
+						node.parent = nodes_tree.nodes[parent]
+
 					# color ramp
 					if node.bl_idname in ["ShaderNodeValToRGB"]:
 						node.color_ramp.color_mode    = node_data["attributes"]["color_mode"]
@@ -178,11 +183,6 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 							if node.bl_idname not in utils.ignore.nodes:
 								if hasattr(node.outputs[index], "default_value"):
 									node.outputs[index].default_value = sock_value
-
-					# parent
-					parent = node_data["parent"]
-					if parent:
-						node.parent = nodes_tree.nodes[parent]
 
 					#~ except Exception as error:
 						#~ print(error)
