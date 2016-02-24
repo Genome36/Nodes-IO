@@ -15,7 +15,7 @@ class ignore():
 	nodes = [
 		"NodeFrame",
 		"NodeReroute",
-		"ShaderNodeAttribute",
+		"ShaderNodeAddShader",
 		"ShaderNodeCameraData",
 		"ShaderNodeHairInfo",
 		"ShaderNodeHoldout",
@@ -25,11 +25,6 @@ class ignore():
 		"ShaderNodeOutputLamp",
 		"ShaderNodeOutputMaterial",
 		"ShaderNodeParticleInfo",
-		"ShaderNodeRGB",
-		"ShaderNodeTangent",
-		"ShaderNodeTexCoord",
-		"ShaderNodeUVMap",
-		"ShaderNodeValue"
 	]
 
 
