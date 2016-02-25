@@ -65,6 +65,8 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 		material      = active_object.material_slots[0].material
 		mat_tree      = material.node_tree
 
+		errors = []
+
 		for shader in self.files:
 			#~ try:
 			# load shader data
@@ -91,10 +93,8 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 				else:
 					nodes_tree = mat_tree
 
-
 				# parse
 				for node_data in tree["nodes"]:
-					#~ try:
 					# create instance
 					node = nodes_tree.nodes.new(node_data["attributes"]["bl_idname"])
 					node.select = True
@@ -108,16 +108,22 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 					del node_data["attributes"]["datablock"]
 
 					# set data
-					utils.set.attributes(nodes_tree, node, node_data)
-					utils.set.socket.inputs(nodes_tree, node, node_data)
-					utils.set.socket.outputs(nodes_tree, node, node_data)
+					try:
+						utils.set.attributes(nodes_tree, node, node_data)
+						utils.set.socket.inputs(nodes_tree, node, node_data)
+						utils.set.socket.outputs(nodes_tree, node, node_data)
 
-					#~ except Exception as error:
-						#~ print(error)
+					# catch errors reported by utils
+					except Exception as e:
+						errors.append(e)
 
 
 				# create links
 				utils.set.links(nodes_tree, tree["links"])
+
+				for e in errors:
+					self.report({'ERROR'}, str(e))
+
 
 		return {'FINISHED'}
 
