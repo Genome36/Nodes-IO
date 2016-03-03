@@ -272,7 +272,6 @@ def register():
 
 	import imp
 	imp.reload(utils)
-	imp.reload(attributes)
 
 	#bpy.types.USERPREF_HT_header.append()
 	# debugging - actually prevents blender from running and launches a python console in a terminal to probe script values
