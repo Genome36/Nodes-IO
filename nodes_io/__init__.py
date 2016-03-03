@@ -56,8 +56,7 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 
 	@classmethod
 	def poll(cls, context):
-		scene = context.scene
-		return (scene and scene.render.engine in ["BLENDER_RENDER", "CYCLES"])
+		return io_poll(cls, context)
 
 
 	def execute(self, context):
@@ -132,8 +131,7 @@ class sio_export(bpy.types.Operator):
 
 	@classmethod
 	def poll(cls, context):
-		scene = context.scene
-		return (scene and scene.render.engine in ["BLENDER_RENDER", "CYCLES"])
+		return io_poll(cls, context)
 
 
 	def execute(self, context):
@@ -234,6 +232,20 @@ class sio_export(bpy.types.Operator):
 			)
 
 		return {'FINISHED'}
+
+# --------------------------------------------------
+# IMPORT / EXPORT POLL
+# --------------------------------------------------
+
+def io_poll(cls, context):
+	scene      = context.scene
+	space_data = context.space_data
+
+	return (
+		scene \
+		and scene.render.engine in ["BLENDER_RENDER", "CYCLES"] \
+		and space_data.tree_type in ["ShaderNodeTree", "CompositorNodeTree"]
+	)
 
 # --------------------------------------------------
 # ADD OPERATOR TO NODE EDITOR HEADER
