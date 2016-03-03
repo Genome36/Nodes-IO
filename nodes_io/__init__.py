@@ -61,9 +61,9 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 
 
 	def execute(self, context):
-		active_object = context.active_object
-		material      = active_object.material_slots[0].material
-		mat_tree      = material.node_tree
+		space_data = context.space_data
+		root       = space_data.node_tree
+		tree_type  = space_data.tree_type
 
 		for shader in self.files:
 			#~ try:
@@ -72,7 +72,7 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 			shader = file_handler.get_data(file_path)
 
 			# deselect all nodes prior to import
-			for node in mat_tree.nodes:
+			for node in root.nodes:
 				if hasattr(node, "select"):
 					node.select = False
 
@@ -88,7 +88,7 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 					else:
 						nodes_tree = bpy.data.node_groups.new(tree["name"], tree["type"])
 				else:
-					nodes_tree = mat_tree
+					nodes_tree = root
 
 
 				# parse
@@ -138,12 +138,12 @@ class sio_export(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
 
 
 	def execute(self, context):
-		active_object = context.active_object
-		material      = active_object.material_slots[0].material
-		mat_tree      = material.node_tree
+		space_data = context.space_data
+		root       = space_data.node_tree
+		tree_type  = space_data.tree_type
 
 		trees_list = {
-			0: ("base", mat_tree.bl_idname, mat_tree)
+			0: ("base", root.bl_idname, root)
 		}
 
 		# find groups via recursion
@@ -181,7 +181,7 @@ class sio_export(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
 								# stop loop for efficiency
 								break
 
-		recursive_search(mat_tree)
+		recursive_search(root)
 
 
 		trees_dump = {}
