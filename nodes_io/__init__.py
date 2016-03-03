@@ -7,6 +7,7 @@ import os
 
 # tools
 from . import utils
+from . import file_handler
 
 
 bl_info = {
@@ -35,7 +36,7 @@ __version__   = "Nodes IO version %s.%s.%s" % bl_info["version"]
 
 class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 	bl_idname = "sio.import"
-	bl_label  = "Import file as shader"
+	bl_label  = "Import file"
 
 	directory = bpy.props.StringProperty(
 		maxlen  = 1024,
@@ -48,10 +49,10 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 		options = {"HIDDEN", "SKIP_SAVE"}
 	)
 
-	filter_glob = bpy.props.StringProperty(
-		default = "*.mat",
-		options = {"HIDDEN"},
-	)
+	#~ filter_glob = bpy.props.StringProperty(
+		#~ default = "*.mat",
+		#~ options = {"HIDDEN"},
+	#~ )
 
 
 	@classmethod
@@ -68,8 +69,7 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 			#~ try:
 			# load shader data
 			file_path = os.path.join(self.directory, shader.name)
-			with open(file_path, "r") as shader_file:
-				shader = json.load(shader_file)
+			shader = file_handler.get_data(file_path)
 
 			# deselect all nodes prior to import
 			for node in mat_tree.nodes:
@@ -124,9 +124,12 @@ class sio_import(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 # EXPORT OPERATOR
 # --------------------------------------------------
 
-class sio_export(bpy.types.Operator):
+class sio_export(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
 	bl_idname = "sio.export"
-	bl_label  = "Export shader to file"
+	bl_label  = "Export to file"
+
+	filename_ext = file_handler.extension("ShaderNodeTree")
+
 
 
 	@classmethod
@@ -207,29 +210,20 @@ class sio_export(bpy.types.Operator):
 				"links": utils.get.links(tree)
 			}
 
+		# decompose filepath
+		directory = os.path.dirname(self.filepath)
+		filename  = self.filepath.replace(directory, "")
 
-		# format name
-		mat_name = material.name
-		for i in [".", " "]:
-			mat_name = mat_name.replace(i, "_")
-
-		# get directory
-		blend_path = bpy.data.filepath
-		directory  = os.path.dirname(blend_path)
-		file_path  = os.path.join(directory, "%s.mat" % mat_name)
-
-		#~ # dump shader data
-		with open(file_path, "w") as shader_file:
-			json.dump(
-				{
-					"engine":  context.scene.render.engine,
-					"version": bpy.app.version,
-					"trees":   trees_dump,
-					#~ "groups":  groups
-				},
-				shader_file,
-				indent = 4
-			)
+		# dump data
+		file_handler.set_data(
+			self.filepath,
+			{
+				"engine":  context.scene.render.engine,
+				"version": bpy.app.version,
+				"trees":   trees_dump,
+				#~ "groups":  groups
+			}
+		)
 
 		return {'FINISHED'}
 
@@ -272,6 +266,7 @@ def register():
 
 	import imp
 	imp.reload(utils)
+	imp.reload(file_handler)
 
 	#bpy.types.USERPREF_HT_header.append()
 	# debugging - actually prevents blender from running and launches a python console in a terminal to probe script values
